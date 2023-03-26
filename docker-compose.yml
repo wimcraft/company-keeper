@@ -1,0 +1,43 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ".env"
+    volumes:
+      - ".:/go/src/app"
+    command: [ "go", "run", "main.go" ]
+
+  db:
+    image: postgres
+    environment:
+      PGDATA: /.data/postgres
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    command: "-p ${POSTGRES_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - postgres:/.data/postgres
+      # copy the sql script to create tables
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  db-test:
+    image: postgres
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    command: "-p ${POSTGRES_PORT}"
+    env_file:
+      - .test.env
+    volumes:
+      # copy the sql script to create tables
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+volumes:
+  postgres:
